@@ -119,7 +119,7 @@ public class TileManager : MonoBehaviour
 
     void SetTilesValuesForRooms()
     {
-        
+        /*
         for (int i = 0; i < rooms.Length; i++)
         {
             Room currentRoom = rooms[i];
@@ -136,7 +136,7 @@ public class TileManager : MonoBehaviour
                 }
             }
         }
-        /*
+        */
         foreach(Room i in rooms)
         {
             Room currentRoom = i;
@@ -152,8 +152,8 @@ public class TileManager : MonoBehaviour
                     Debug.Log("set tile value x: " + xCoord + "y: " + yCoord);
                 }
             }
+            
         }
-        */
     }
 
     void InstantiateTiles()

@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 
 [CustomEditor(typeof(TileMap))]
-public class TileMapInspector : Editor {
+public class TGMapInspector : Editor {
 
     public override void OnInspectorGUI()
     {

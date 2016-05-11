@@ -11,27 +11,88 @@ public class TileMap : MonoBehaviour
     public int sizeX = 100;
     public int sizeZ = 50;
     public float tileSize = 1.0f;
+
+    public Texture2D terrainTiles;
+    public int tileResolution;
+
     //int tileResolution = 8;
-	// Use this for initialization
-	void Start ()
+
+    GameObject lowerLeft;
+    GameObject down;
+    GameObject lowerRight;
+    GameObject left;
+    GameObject right;
+    GameObject upperLeft;
+    GameObject up;
+    GameObject upperRight;
+    GameObject floor;
+
+    public GameObject[] wallTiles;
+
+    private GameObject boardHolder;
+
+    // Use this for initialization
+    void Start ()
     {
+        
+        wallTiles = new GameObject[10];
+        wallTiles[0] = null;
+        wallTiles[1] = Resources.Load("Prefabs/tile_lower_left") as GameObject;
+        wallTiles[2] = Resources.Load("Prefabs/tile_down") as GameObject;
+        wallTiles[3] = Resources.Load("Prefabs/tile_lower_right") as GameObject;
+        wallTiles[4] = Resources.Load("Prefabs/tile_left") as GameObject;
+        wallTiles[5] = Resources.Load("Prefabs/tile_right") as GameObject;
+        wallTiles[6] = Resources.Load("Prefabs/tile_upper_left") as GameObject;
+        wallTiles[7] = Resources.Load("Prefabs/tile_up") as GameObject;
+        wallTiles[8] = Resources.Load("Prefabs/tile_upper_right") as GameObject;
+        wallTiles[9] = Resources.Load("Prefabs/tile_middle") as GameObject;
+
+        boardHolder = new GameObject("TileHolder");
+
         BuildMesh();
 	}
+    
+    Color[][] ChopUpTiles()
+    {
+        int numTilesPerRow = terrainTiles.width / tileResolution;
+        int numRows = terrainTiles.height / tileResolution;
 
+        Color[][] tiles = new Color[numTilesPerRow * numRows][];
+
+        for(int y = 0; y < numRows; y++)
+        {
+            for(int x = 0; x < numTilesPerRow; x++)
+            {
+                tiles[y * numTilesPerRow + x] = terrainTiles.GetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution);
+            }
+        }
+
+        return tiles;
+
+    }
+    
     void BuildTexture()
     {
-        int texWidth = 10;
-        int texHeight = 10;
+        DTileMap map = new DTileMap(sizeX, sizeZ);
+
+        int texWidth = sizeX * tileResolution;
+        int texHeight = sizeZ * tileResolution;
         //Texture2D texture = new Texture2D(sizeX * tileResolution, sizeZ * tileResolution);
         Texture2D texture = new Texture2D(texWidth, texHeight);
 
-        for(int y = 0; y < texHeight; y++)
+        Color[][] tiles = ChopUpTiles();
+
+        for(int y = 0; y < sizeZ; y++)
         {
-            for(int x = 0; x < texWidth; x++)
+            for(int x = 0; x < sizeX; x++)
             {
-                Color c = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+                //Color c = new Color(Random.Range(0f, 1f), Random.Range(0f, 1f), Random.Range(0f, 1f));
+                //texture.SetPixel(x, y, c);
+
+                //Color[] p = tiles[map.GetTileAt(x, y)];
+                //texture.SetPixels(x * tileResolution, y * tileResolution, tileResolution, tileResolution, p);
+                Build3DRoom(x, y, map.GetTileAt(x, y));
                 
-                texture.SetPixel(x, y, c);
             }
         }
 
@@ -42,10 +103,14 @@ public class TileMap : MonoBehaviour
         MeshRenderer mesh_renderer = GetComponent<MeshRenderer>();
         mesh_renderer.sharedMaterials[0].mainTexture = texture;
         Debug.Log("Done Texture!");
+
+        
     }
+    
 
     public void BuildMesh()
     {
+
         int numTiles = sizeX * sizeZ;
         int numTris = numTiles * 2;
 
@@ -65,7 +130,7 @@ public class TileMap : MonoBehaviour
         {
             for (x = 0; x < vsizeX; x++)
             {
-                vertices[z * vsizeX + x] = new Vector3(x * tileSize, Random.Range(-1f, 1f), z * tileSize);
+                vertices[z * vsizeX + x] = new Vector3(x * tileSize, 0, z * tileSize);
                 normals[z * vsizeX + x] = Vector3.up;
                 uv[z * vsizeX + x] = new Vector2((float)x / sizeX, (float)z / sizeZ);
             }
@@ -150,5 +215,21 @@ public class TileMap : MonoBehaviour
         Debug.Log("Done Mesh!");
 
         BuildTexture();
+    }
+
+    void Build3DRoom(int x, int y, int type)
+    {
+        if (type != 0)
+        {
+            InstantiateFromArray(wallTiles[type], x, y);
+        }
+    }
+
+    void InstantiateFromArray(GameObject prefabs, float xCoord, float yCoord)
+    {
+        Vector3 position = new Vector3(xCoord, 0f, yCoord);
+
+        GameObject tileInstance = Instantiate(prefabs, position, Quaternion.identity) as GameObject;
+        tileInstance.transform.parent = boardHolder.transform;
     }
 }
