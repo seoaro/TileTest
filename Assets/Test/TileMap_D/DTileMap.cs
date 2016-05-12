@@ -10,6 +10,8 @@ public class DTileMap
         public int width;
         public int height;
 
+        public bool isConnected = false;
+
         public int right
         {
             get
@@ -23,6 +25,22 @@ public class DTileMap
             get
             {
                 return top + height - 1;
+            }
+        }
+
+        public int centerX
+        {
+            get
+            {
+                return left + width / 2;
+            }
+        }
+
+        public int centerY
+        {
+            get
+            {
+                return top + height / 2;
             }
         }
 
@@ -76,6 +94,7 @@ public class DTileMap
 
     public DTileMap(int size_x, int size_y)
     {
+        DRoom r;
         this.sizeX = size_x;
         this.sizeY = size_y;
 
@@ -83,12 +102,14 @@ public class DTileMap
 
         rooms = new List<DRoom>();
 
+        int maxFails = 10;
+
         for(int i = 0; i < 10; i++)
         {
             int roomSizeX = Random.Range(4, 8);
             int roomSizeY = Random.Range(4, 8);
 
-            DRoom r = new DRoom();
+            r = new DRoom();
             r.left = Random.Range(0, size_x - roomSizeX);
             r.top = Random.Range(0, size_y - roomSizeY);
             r.width = roomSizeX;
@@ -99,13 +120,33 @@ public class DTileMap
                 rooms.Add(r);
                 
             }
+            else
+            {
+                maxFails--;
+                if(maxFails <= 0)
+                {
+                    break;
+                }
+            }
 
             foreach(DRoom r2 in rooms)
             {
                 MakeRoom(r2);
             }
-            //rooms.Add(r);
-            //MakeRoom(r);
+
+
+            for (int j = 0; j < rooms.Count; j++)
+            {
+                
+                if (!rooms[j].isConnected)
+                {
+                    int k = Random.Range(1, rooms.Count);
+                    MakeCorridor(rooms[j], rooms[(j + k) % rooms.Count]);
+                }
+                
+            }
+            //MakeCorridor(rooms[0], rooms[1]);
+
         }
 
     }
@@ -176,6 +217,64 @@ public class DTileMap
                 //map_data[left + x, top + y] = (int)TileType.Floor;
             }
         }
+    }
+
+    void MakeCorridor(DRoom r1, DRoom r2)
+    {
+        int x = r1.centerX;
+        int y = r1.centerY;
+
+        while(x != r2.centerX)
+        {
+            map_data[x, y] = (int)TileType.Floor;
+            x += x < r2.centerX ? 1 : -1;
+        }
+
+        while (y != r2.centerY)
+        {
+            map_data[x, y] = (int)TileType.Floor;
+            y += y < r2.centerY ? 1 : -1;
+        }
+
+
+    }
+
+    void MakeWalls()
+    {
+        for(int x = 0; x < sizeX; x++)
+        {
+            for(int y = 0; y < sizeY; y++)
+            {
+                if(map_data[x, y] == (int)TileType.Floor && HasAdjacentFloor(x, y))
+                {
+                    map_data[x, y] = (int)TileType.UpWall;
+                }
+            }
+        }
+    }
+
+    bool HasAdjacentFloor(int x, int y)
+    {
+        if (x > 0 && map_data[x - 1, y] == 1)
+            return true;
+        if (x < sizeX - 1 && map_data[x + 1, y] == 1)
+            return true;
+        if (y > 0 && map_data[x, y - 1] == 1)
+            return true;
+        if (y < sizeY - 1 && map_data[x, y + 1] == 1)
+            return true;
+
+        if (x > 0 && y > 0 && map_data[x - 1, y - 1] == 1)
+            return true;
+        if (x < sizeX - 1 && y > 0 && map_data[x + 1, y - 1] == 1)
+            return true;
+
+        if (x > 0 && y < sizeY - 1 && map_data[x - 1, y + 1] == 1)
+            return true;
+        if (x < sizeX - 1 && y < sizeY - 1 && map_data[x + 1, y + 1] == 1)
+            return true;
+
+        return false;
     }
 
 }
